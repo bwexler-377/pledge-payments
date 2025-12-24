@@ -459,45 +459,20 @@
             
             console.log('Processing payment with amount:', amount);
             
-            const apiUrl = 'https://barkai-pledge-api-be3d9f868746.herokuapp.com/api/create-checkout';
-            
-            fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: 'createCheckout',
-                    accountId: accountId,
-                    amount: parseFloat(amount.toFixed(2)),
-                    fullName: getUrlParameter('fullName') || '',
-                    email: getUrlParameter('email') || ''
-                })
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('API Response:', data);
-                
-                if (data.success && data.checkoutUrl) {
-                    console.log('Redirecting to:', data.checkoutUrl);
-                    window.location.href = data.checkoutUrl;
-                } else {
-                    showError(data.error || 'Failed to process payment. Please try again.');
-                    payButton.disabled = false;
-                    payButton.classList.remove('loading');
-                    payButton.innerHTML = 'Pay Now';
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                showError('An error occurred. Please try again or contact support.');
-                payButton.disabled = false;
-                payButton.classList.remove('loading');
-                payButton.innerHTML = 'Pay Now';
+            // Build the payment URL with query parameters
+            const params = new URLSearchParams({
+                account: accountId,
+                balance: parseFloat(amount.toFixed(2)),
+                fullName: getUrlParameter('fullName') || '',
+                email: getUrlParameter('email') || ''
             });
+            
+            const paymentUrl = `https://barkai-pledge-api-be3d9f868746.herokuapp.com/api/create-checkout?${params.toString()}`;
+            
+            console.log('Redirecting to:', paymentUrl);
+            
+            // Redirect directly to Heroku (which will redirect to Stripe)
+            window.location.href = paymentUrl;
         }
         
         function showError(message) {
