@@ -13,7 +13,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #082c66 0%, #0d47a1 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,7 +24,8 @@
         .container {
             background: white;
             border-radius: 14px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid #ffbd0d;
+            box-shadow: 0 20px 60px rgba(8, 44, 102, 0.3);
             max-width: 420px;
             width: 100%;
             padding: 28px 24px;
@@ -38,7 +39,7 @@
         .logo {
             width: 45px;
             height: 45px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #082c66 0%, #0d47a1 100%);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -62,16 +63,39 @@
             margin-bottom: 16px;
         }
         
+        .donor-info {
+            background: #f9fafb;
+            border-left: 4px solid #ffbd0d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .donor-label {
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .donor-name {
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
         .balance-box {
             background: #f0f9ff;
-            border-left: 4px solid #0284c7;
+            border-left: 4px solid #ffbd0d;
             border-radius: 8px;
             padding: 14px;
             margin-bottom: 18px;
         }
         
         .balance-label {
-            color: #0c4a6e;
+            color: #082c66;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
@@ -80,7 +104,7 @@
         }
         
         .balance-amount {
-            color: #0284c7;
+            color: #ffbd0d;
             font-size: 28px;
             font-weight: 700;
         }
@@ -119,16 +143,16 @@
         }
         
         .option-btn:hover {
-            border-color: #667eea;
+            border-color: #082c66;
             background: #f9fafb;
             transform: translateY(-1px);
         }
         
         .option-btn.active {
-            background: #667eea;
+            background: #082c66;
             color: white;
-            border-color: #667eea;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            border-color: #082c66;
+            box-shadow: 0 2px 8px rgba(8, 44, 102, 0.3);
         }
         
         .custom-amount-input {
@@ -166,14 +190,14 @@
         
         .amount-input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #082c66;
+            box-shadow: 0 0 0 3px rgba(8, 44, 102, 0.1);
         }
         
         .pay-button {
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #082c66 0%, #0d47a1 100%);
             color: white;
             border: none;
             border-radius: 7px;
@@ -186,7 +210,7 @@
         
         .pay-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 16px rgba(8, 44, 102, 0.4);
         }
         
         .pay-button:disabled {
@@ -218,8 +242,8 @@
             width: 100%;
             padding: 11px;
             background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
+            color: #082c66;
+            border: 2px solid #082c66;
             border-radius: 7px;
             font-size: 14px;
             font-weight: 600;
@@ -228,7 +252,7 @@
         }
         
         .cancel-button:hover {
-            background: #f3f4f6;
+            background: #f0f7ff;
             transform: translateY(-1px);
         }
         
@@ -240,14 +264,14 @@
             font-size: 12px;
             margin-top: 12px;
             padding-top: 12px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 2px solid #ffbd0d;
             justify-content: center;
         }
         
         .lock-icon {
             width: 14px;
             height: 14px;
-            color: #10b981;
+            color: #ffbd0d;
         }
         
         .error-message {
@@ -295,6 +319,13 @@
         <div class="debug-info" id="debugInfo"></div>
         <div class="error-message" id="errorMessage"></div>
         
+        <!-- Donor Name Section -->
+        <div class="donor-info">
+            <div class="donor-label">Donor Name</div>
+            <div class="donor-name" id="donorName">Loading...</div>
+        </div>
+        
+        <!-- Balance Due Section -->
         <div class="balance-box">
             <div class="balance-label">Balance Due</div>
             <div class="balance-amount" id="balanceAmount">$0.00</div>
@@ -377,16 +408,21 @@
         // Initialize
         const balanceAmount = parseFloat(getUrlParameter('balance')) || 0;
         const accountId = getUrlParameter('account') || 'N/A';
+        const fullName = getUrlParameter('fullName') || 'Donor';
         
         console.log('=== Payment Page Debug ===');
         console.log('Current URL:', window.location.href);
         console.log('Balance param:', getUrlParameter('balance'));
         console.log('Account param:', getUrlParameter('account'));
+        console.log('Full Name param:', getUrlParameter('fullName'));
         console.log('Parsed balance:', balanceAmount);
         console.log('Parsed account:', accountId);
+        console.log('Parsed name:', fullName);
         
         // Update display
         document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
+        document.getElementById('donorName').textContent = fullName;
+        
         if (accountId !== 'N/A') {
             document.getElementById('accountInfo').textContent = `Account ID: ${accountId}`;
         }
