@@ -433,7 +433,7 @@
         async function fetchDonorName() {
             try {
                 // Google Apps Script API endpoint for donor lookup
-                const API_URL = 'https://script.google.com/macros/s/AKfycbyGTwiDk66pWrwYNaiV_FVKjTtcCp2NwH8ZRY0JLelW3ZKsYxT0MSQ1YXcT0uvB9gE9/exec';
+                const API_URL = 'https://script.google.com/macros/s/AKfycbyGTwiDk66pWrwYNaiV_FVKjTtcCp2NwH8ZRY0JLelW3ZKsYxT0MSQ1YXcT0uvB9gE9/usercache/call';
                 
                 const response = await fetch(`${API_URL}?action=getDonor&account=${encodeURIComponent(accountId)}`);
                 const data = await response.json();
