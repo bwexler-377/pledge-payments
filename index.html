@@ -306,6 +306,11 @@
             color: #6b7280;
             display: none;
         }
+
+        .donor-name.loading {
+            color: #9ca3af;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -322,7 +327,7 @@
         <!-- Donor Name Section -->
         <div class="donor-info">
             <div class="donor-label">Donor Name</div>
-            <div class="donor-name" id="donorName">Loading...</div>
+            <div class="donor-name loading" id="donorName">Loading...</div>
         </div>
         
         <!-- Balance Due Section -->
@@ -408,23 +413,53 @@
         // Initialize
         const balanceAmount = parseFloat(getUrlParameter('balance')) || 0;
         const accountId = getUrlParameter('account') || 'N/A';
-        const fullName = getUrlParameter('fullName') || 'Donor';
         
         console.log('=== Payment Page Debug ===');
         console.log('Current URL:', window.location.href);
         console.log('Balance param:', getUrlParameter('balance'));
         console.log('Account param:', getUrlParameter('account'));
-        console.log('Full Name param:', getUrlParameter('fullName'));
         console.log('Parsed balance:', balanceAmount);
         console.log('Parsed account:', accountId);
-        console.log('Parsed name:', fullName);
         
-        // Update display
+        // Update display - balance amount
         document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
-        document.getElementById('donorName').textContent = fullName;
         
+        // Update display - account ID (only if not default value)
         if (accountId !== 'N/A') {
             document.getElementById('accountInfo').textContent = `Account ID: ${accountId}`;
+        }
+
+        // Fetch donor name from API
+        async function fetchDonorName() {
+            try {
+                // TODO: Replace YOUR_DEPLOYMENT_ID with your actual Google Apps Script deployment ID
+                const API_URL = 'https://script.google.com/macros/d/YOUR_DEPLOYMENT_ID/usercache/call';
+                
+                const response = await fetch(`${API_URL}?action=getDonor&account=${encodeURIComponent(accountId)}`);
+                const data = await response.json();
+                
+                if (data.success && data.fullName) {
+                    console.log('✅ Fetched donor name:', data.fullName);
+                    document.getElementById('donorName').textContent = data.fullName;
+                    document.getElementById('donorName').classList.remove('loading');
+                } else {
+                    console.warn('⚠️ Could not fetch donor name:', data.error);
+                    document.getElementById('donorName').textContent = 'Donor';
+                    document.getElementById('donorName').classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('❌ Error fetching donor name:', error);
+                document.getElementById('donorName').textContent = 'Donor';
+                document.getElementById('donorName').classList.remove('loading');
+            }
+        }
+
+        // Load donor name if account ID is provided
+        if (accountId && accountId !== 'N/A') {
+            fetchDonorName();
+        } else {
+            document.getElementById('donorName').textContent = 'Donor';
+            document.getElementById('donorName').classList.remove('loading');
         }
         
         let selectedAmount = balanceAmount;
