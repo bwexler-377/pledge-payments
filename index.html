@@ -63,29 +63,6 @@
             margin-bottom: 16px;
         }
         
-        .donor-info {
-            background: #f9fafb;
-            border-left: 4px solid #ffbd0d;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .donor-label {
-            color: #6b7280;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        
-        .donor-name {
-            color: #1f2937;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
         .balance-box {
             background: #f0f9ff;
             border-left: 4px solid #ffbd0d;
@@ -371,7 +348,21 @@
     
     <script>
         /**
-         * Get URL parameters from query string (?key=value)
+         * Decode Base64 string
+         */
+        function decodeBase64(str) {
+            try {
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                console.error('Base64 decode error:', e);
+                return null;
+            }
+        }
+
+        /**
+         * Get URL query parameters
          */
         function getQueryParameter(name) {
             try {
@@ -387,30 +378,26 @@
                 return null;
             }
         }
-
-        /**
-         * Get hash parameters from URL fragment (#key=value&key2=value2)
-         */
-        function getHashParameter(name) {
-            try {
-                const hash = window.location.hash.substring(1);
-                const params = new URLSearchParams(hash);
-                const param = params.get(name);
-                if (param) {
-                    console.log(`Found ${name} in hash: ${param}`);
-                    return param;
-                }
-                return null;
-            } catch (e) {
-                console.error('Error getting hash parameter:', e);
-                return null;
-            }
-        }
         
         // Initialize
         const accountId = getQueryParameter('account') || 'N/A';
-        const fullName = getHashParameter('fullName') || 'Donor';
-        const balanceAmount = parseFloat(getHashParameter('balance')) || 0;
+        const encodedData = getQueryParameter('data') || null;
+        
+        let fullName = 'Donor';
+        let balanceAmount = 0;
+        
+        // Decode Base64 data
+        if (encodedData) {
+            const decodedData = decodeBase64(encodedData);
+            if (decodedData) {
+                const parts = decodedData.split('|');
+                if (parts.length === 2) {
+                    fullName = parts[0] || 'Donor';
+                    balanceAmount = parseFloat(parts[1]) || 0;
+                    console.log('✅ Decoded data - Name:', fullName, 'Balance:', balanceAmount);
+                }
+            }
+        }
         
         console.log('=== Payment Page Debug ===');
         console.log('Current URL:', window.location.href);
@@ -418,7 +405,7 @@
         console.log('Full Name:', fullName);
         console.log('Balance:', balanceAmount);
         
-        // Update display - balance amount (instant, no API call)
+        // Update display - balance amount
         document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
         
         // Update display - donor name and account ID at bottom
@@ -503,7 +490,7 @@
                 account: accountId,
                 balance: parseFloat(amount.toFixed(2)),
                 fullName: fullName,
-                email: getHashParameter('email') || ''
+                email: ''
             });
             
             const paymentUrl = `https://barkai-pledge-api-be3d9f868746.herokuapp.com/api/create-checkout?${params.toString()}`;
