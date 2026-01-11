@@ -351,8 +351,9 @@
         console.log('Full Name:', fullName);
         console.log('Balance:', balanceAmount);
         
-        // Update display - balance amount
-        document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
+        // Update display - balance amount (with comma formatting)
+        const formattedBalance = balanceAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('balanceAmount').textContent = `$${formattedBalance}`;
         
         // Update display - donor name and account ID at bottom
         if (fullName && fullName !== 'Donor') {
