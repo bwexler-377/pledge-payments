@@ -319,12 +319,6 @@
         <div class="debug-info" id="debugInfo"></div>
         <div class="error-message" id="errorMessage"></div>
         
-        <!-- Donor Name Section -->
-        <div class="donor-info">
-            <div class="donor-label">Donor Name</div>
-            <div class="donor-name" id="donorName">Donor</div>
-        </div>
-        
         <!-- Balance Due Section -->
         <div class="balance-box">
             <div class="balance-label">Balance Due</div>
@@ -369,7 +363,10 @@
             <span>Secure payment powered by Stripe</span>
         </div>
         
-        <div class="account-id" id="accountInfo"></div>
+        <div class="account-id" id="accountInfo">
+            <span id="donorNameBottom"></span>
+            <span id="accountIdBottom"></span>
+        </div>
     </div>
     
     <script>
@@ -421,15 +418,16 @@
         console.log('Full Name:', fullName);
         console.log('Balance:', balanceAmount);
         
-        // Update display - donor name (instant, no API call)
-        document.getElementById('donorName').textContent = fullName;
-        
         // Update display - balance amount (instant, no API call)
         document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
         
-        // Update display - account ID (only if not default value)
+        // Update display - donor name and account ID at bottom
+        if (fullName && fullName !== 'Donor') {
+            document.getElementById('donorNameBottom').textContent = `${fullName} • `;
+        }
+        
         if (accountId !== 'N/A') {
-            document.getElementById('accountInfo').textContent = `Account ID: ${accountId}`;
+            document.getElementById('accountIdBottom').textContent = `Account ID: ${accountId}`;
         }
         
         let selectedAmount = balanceAmount;
