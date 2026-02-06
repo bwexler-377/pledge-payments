@@ -306,6 +306,7 @@
         <div class="header">
             <div class="logo">
                 <img src="https://res.cloudinary.com/dmrdiejaf/image/upload/v1770394642/Barkai_Logo_1_qurfqs.png" alt="Barkai Yeshivah" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
             <h1>Pledge Payment</h1>
             <p class="subtitle">Barkai Yeshivah</p>
         </div>
@@ -398,21 +399,32 @@
         }
         
         // Initialize
-        const accountId = getQueryParameter('account') || 'N/A';
+        let accountId = getQueryParameter('account') || 'N/A';
         const encodedData = getQueryParameter('data') || null;
         
         let fullName = 'Donor';
         let balanceAmount = 0;
         
-        // Decode Base64 data
+        // Decode Base64 data - FIXED: Now handles 3 parts (accountId|fullName|balance)
         if (encodedData) {
             const decodedData = decodeBase64(encodedData);
+            console.log('Raw decoded data:', decodedData);
             if (decodedData) {
                 const parts = decodedData.split('|');
-                if (parts.length === 2) {
-                    fullName = parts[0] || 'Donor';
-                    balanceAmount = parseFloat(parts[1]) || 0;
-                    console.log('✅ Decoded data - Name:', fullName, 'Balance:', balanceAmount);
+                console.log('Parts count:', parts.length, 'Parts:', parts);
+                if (parts.length === 3) {
+                    const decodedAccountId = parts[0] || 'N/A';
+                    fullName = parts[1] || 'Donor';
+                    balanceAmount = parseFloat(parts[2]) || 0;
+                    
+                    // Update account ID if found in data
+                    if (decodedAccountId !== 'N/A') {
+                        accountId = decodedAccountId;
+                    }
+                    
+                    console.log('✅ DECODED DATA - Account ID:', accountId, 'Full Name:', fullName, 'Balance:', balanceAmount);
+                } else {
+                    console.error('❌ Invalid data format. Expected 3 parts (accountId|fullName|balance), got:', parts.length);
                 }
             }
         }
