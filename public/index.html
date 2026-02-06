@@ -37,29 +37,30 @@
         }
         
         .logo {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, #082c66 0%, #0d47a1 100%);
+            width: 70px;
+            height: 70px;
+            background: white;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 10px;
-            color: white;
-            font-size: 22px;
+            margin: 0 auto 15px;
+            font-size: 45px;
             font-weight: bold;
+            border: 2px solid #ffbd0d;
         }
         
         h1 {
             color: #1f2937;
             font-size: 22px;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
             font-weight: 700;
         }
         
         .subtitle {
-            color: #6b7280;
-            font-size: 12px;
+            color: #082c66;
+            font-size: 18px;
+            font-weight: 700;
             margin-bottom: 16px;
         }
         
@@ -195,6 +196,26 @@
             cursor: not-allowed;
         }
         
+        .pay-button.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         .cancel-button {
             width: 100%;
             padding: 11px;
@@ -231,21 +252,66 @@
             color: #ffbd0d;
         }
         
-        .account-id {
-            color: #9ca3af;
-            font-size: 11px;
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .account-info {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
             text-align: center;
-            margin-top: 12px;
+        }
+        
+        .donor-name {
+            color: #1f2937;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .account-id {
+            color: #6b7280;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .debug-info {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            color: #6b7280;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">💳</div>
+            <div class="logo">
+                <img src="https://res.cloudinary.com/dmrdiejaf/image/upload/v1770394642/Barkai_Logo_1_qurfqs.png" alt="Barkai Yeshivah" style="width: 100%; height: 100%; object-fit: contain;">
             <h1>Pledge Payment</h1>
             <p class="subtitle">Barkai Yeshivah</p>
         </div>
+        
+        <div class="debug-info" id="debugInfo"></div>
+        <div class="error-message" id="errorMessage"></div>
         
         <!-- Balance Due Section -->
         <div class="balance-box">
@@ -291,9 +357,10 @@
             <span>Secure payment powered by Stripe</span>
         </div>
         
-        <div class="account-id" id="accountInfo">
-            <span id="donorNameBottom"></span>
-            <span id="accountIdBottom"></span>
+        <!-- Donor Info Section -->
+        <div class="account-info">
+            <div class="donor-name" id="donorName">Donor</div>
+            <div class="account-id" id="accountIdDisplay">Account ID: N/A</div>
         </div>
     </div>
     
@@ -313,55 +380,57 @@
         }
 
         /**
-         * Get query parameter
+         * Get URL query parameters
          */
         function getQueryParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
+            try {
+                const url = new URL(window.location);
+                const param = url.searchParams.get(name);
+                if (param) {
+                    console.log(`Found ${name} in query: ${param}`);
+                    return param;
+                }
+                return null;
+            } catch (e) {
+                console.error('Error getting query parameter:', e);
+                return null;
+            }
         }
         
         // Initialize
+        const accountId = getQueryParameter('account') || 'N/A';
         const encodedData = getQueryParameter('data') || null;
         
-        let accountId = 'N/A';
         let fullName = 'Donor';
         let balanceAmount = 0;
         
         // Decode Base64 data
         if (encodedData) {
-            console.log('Attempting to decode:', encodedData);
             const decodedData = decodeBase64(encodedData);
             if (decodedData) {
                 const parts = decodedData.split('|');
-                if (parts.length === 3) {
-                    accountId = parts[0] || 'N/A';
-                    fullName = parts[1] || 'Donor';
-                    balanceAmount = parseFloat(parts[2]) || 0;
-                    console.log('✅ Decoded data - Account:', accountId, 'Name:', fullName, 'Balance:', balanceAmount);
+                if (parts.length === 2) {
+                    fullName = parts[0] || 'Donor';
+                    balanceAmount = parseFloat(parts[1]) || 0;
+                    console.log('✅ Decoded data - Name:', fullName, 'Balance:', balanceAmount);
                 }
             }
-        } else {
-            console.log('⚠️ No encoded data found in query params');
         }
         
         console.log('=== Payment Page Debug ===');
         console.log('Current URL:', window.location.href);
-        console.log('Query String:', window.location.search);
         console.log('Account ID:', accountId);
         console.log('Full Name:', fullName);
         console.log('Balance:', balanceAmount);
         
-        // Update display - balance amount (with comma formatting)
-        const formattedBalance = balanceAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        document.getElementById('balanceAmount').textContent = `$${formattedBalance}`;
+        // Update display - balance amount
+        document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
         
-        // Update display - donor name and account ID at bottom
-        if (fullName && fullName !== 'Donor') {
-            document.getElementById('donorNameBottom').textContent = `${fullName} • `;
-        }
+        // Update display - donor name and account ID (enlarged)
+        document.getElementById('donorName').textContent = fullName;
         
         if (accountId !== 'N/A') {
-            document.getElementById('accountIdBottom').textContent = `Account ID: ${accountId}`;
+            document.getElementById('accountIdDisplay').textContent = `Account ID: ${accountId}`;
         }
         
         let selectedAmount = balanceAmount;
@@ -394,6 +463,7 @@
         document.getElementById('customAmount').addEventListener('input', function() {
             const value = parseFloat(this.value) || 0;
             selectedAmount = Math.max(0.50, value);
+            clearError();
         });
         
         // Pay button
@@ -401,7 +471,7 @@
             if (paymentMode === 'custom') {
                 const customValue = parseFloat(document.getElementById('customAmount').value);
                 if (!customValue || customValue < 0.50) {
-                    alert('Minimum payment is $0.50');
+                    showError('Minimum payment is $0.50');
                     return;
                 }
                 selectedAmount = customValue;
@@ -418,7 +488,8 @@
         function processPayment() {
             const payButton = document.getElementById('payButton');
             payButton.disabled = true;
-            payButton.textContent = 'Processing...';
+            payButton.classList.add('loading');
+            payButton.innerHTML = '<span class="spinner"></span>Processing...';
             
             let amount = selectedAmount;
             if (paymentMode === 'custom') {
@@ -444,6 +515,17 @@
             
             // Redirect directly to Heroku (which will redirect to Stripe)
             window.location.href = paymentUrl;
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+        
+        function clearError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
         }
     </script>
 </body>
