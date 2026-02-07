@@ -414,8 +414,11 @@
                 console.log('Parts count:', parts.length, 'Parts:', parts);
                 if (parts.length === 3) {
                     const decodedAccountId = parts[0] || 'N/A';
-                    fullName = parts[1] || 'Donor';
+                    const decodedFullName = parts[1]?.trim() || '';
                     balanceAmount = parseFloat(parts[2]) || 0;
+                    
+                    // Fallback logic: Use fullName if available and not empty, otherwise use 'Donor'
+                    fullName = decodedFullName && decodedFullName.length > 0 ? decodedFullName : 'Donor';
                     
                     // Update account ID if found in data
                     if (decodedAccountId !== 'N/A') {
@@ -435,8 +438,18 @@
         console.log('Full Name:', fullName);
         console.log('Balance:', balanceAmount);
         
-        // Update display - balance amount
-        document.getElementById('balanceAmount').textContent = `$${balanceAmount.toFixed(2)}`;
+        // Format currency function
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+        
+        // Update display - balance amount (with currency formatting)
+        document.getElementById('balanceAmount').textContent = formatCurrency(balanceAmount);
         
         // Update display - donor name and account ID (enlarged)
         document.getElementById('donorName').textContent = fullName;
